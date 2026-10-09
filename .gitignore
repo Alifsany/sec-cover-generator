@@ -1,0 +1,38 @@
+# Python cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+env/
+venv/
+ENV/
+.venv/
+
+# IDE / Editor configuration
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary document generation test files
+*_test_*.docx
+*_test_*.pdf
+test_*.docx
+test_*.pdf
+*.tmp
+*.log
+
+# Environment secrets and credentials
+.env
+.env.*
+secrets.json
+*.key
+*.pem
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

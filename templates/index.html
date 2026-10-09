@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#004b93">
+  <meta name="description" content="Generate and download official Shyamoli Engineering College assignment cover pages in PDF and editable DOCX format.">
+  <title>Assignment Cover Page Generator — Shyamoli Engineering College</title>
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Antonio:wght@700&family=Comfortaa:wght@400;600;700&family=Inter:wght@400;500;600;700&family=Times+New+Roman&display=swap" rel="stylesheet">
+  
+  <style>
+    @font-face {
+      font-family: 'Antonio';
+      src: url('/static/Antonio-Bold.ttf') format('truetype');
+      font-weight: 700;
+    }
+    @font-face {
+      font-family: 'Comfortaa';
+      src: url('/static/Comfortaa-Regular.ttf') format('truetype');
+      font-weight: 400 700;
+    }
+
+    :root {
+      --primary: #004b93;
+      --primary-hover: #00366b;
+      --primary-light: #eff6ff;
+      --secondary: #10b981;
+      --secondary-hover: #059669;
+      --accent-blue: #077acd;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --border-focus: #004b93;
+      --danger: #ef4444;
+      --danger-bg: #fef2f2;
+      --success: #10b981;
+      --success-bg: #ecfdf5;
+      --radius: 14px;
+      --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+      --shadow-lg: 0 10px 20px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* Accessibility focus rings */
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Header */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: clamp(16px, 3.5vw, 24px) 16px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    h1 {
+      font-size: clamp(20px, 4.5vw, 28px);
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      font-size: clamp(13px, 2.5vw, 15px);
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Main Container Layout */
+    .container {
+      max-width: 1240px;
+      margin: clamp(16px, 3vw, 28px) auto;
+      padding: 0 clamp(12px, 3vw, 20px);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: clamp(20px, 3.5vw, 32px);
+    }
+
+    @media (min-width: 1024px) {
+      .container {
+        grid-template-columns: 480px 1fr;
+        align-items: start;
+      }
+    }
+
+    /* Form Card */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: clamp(16px, 4vw, 28px);
+      width: 100%;
+      min-width: 0;
+    }
+
+    .card-title {
+      font-size: clamp(17px, 3vw, 19px);
+      font-weight: 700;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+
+    .card-description {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    .required-star {
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      font-size: 15px;
+      font-family: inherit;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(0, 75, 147, 0.15);
+    }
+
+    input.input-error {
+      border-color: var(--danger) !important;
+      background-color: var(--danger-bg);
+    }
+
+    .field-error-text {
+      color: var(--danger);
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field-error-text.active {
+      display: block;
+    }
+
+    .input-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Action Buttons */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    button, .action-btn {
+      min-height: 50px;
+      border-radius: 10px;
+      font-size: 15.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background-color 0.15s ease, transform 0.05s ease, box-shadow 0.15s ease;
+      border: none;
+      text-decoration: none;
+      user-select: none;
+      padding: 10px 16px;
+      width: 100%;
+    }
+
+    button:active, .action-btn:active {
+      transform: scale(0.985);
+    }
+
+    button:disabled, .action-btn.disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0, 75, 147, 0.2);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--secondary-hover);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #64748b;
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    /* Download Fallback & Result Card (Crucial for Mobile Safari / In-App Browsers) */
+    .mobile-download-fallback {
+      display: none;
+      margin-top: 18px;
+      padding: 16px;
+      background: var(--primary-light);
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .mobile-download-fallback.show {
+      display: block;
+      animation: fadeIn 0.2s ease-in;
+    }
+
+    .fallback-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .fallback-desc {
+      font-size: 12.5px;
+      color: #334155;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .fallback-links {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .fallback-btn {
+      background: #ffffff;
+      border: 1.5px solid var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .fallback-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    /* Notification / Toast */
+    .toast {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      padding: 12px 22px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-lg);
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      max-width: 90vw;
+      text-align: center;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: none;
+    }
+
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+    .toast.info { background: #0284c7; }
+
+    /* Preview Section */
+    .preview-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+    }
+
+    @media (min-width: 1024px) {
+      .preview-wrapper {
+        position: sticky;
+        top: 20px;
+      }
+    }
+
+    .preview-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .preview-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .preview-tag {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #475569;
+      background: #e2e8f0;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    /* Realistic 8.5 x 11 Sheet Canvas */
+    .sheet-container {
+      width: 100%;
+      max-width: 580px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+      aspect-ratio: 8.5 / 11;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 7% 7.5% 7% 7.5%;
+      box-sizing: border-box;
+      background-color: #ffffff;
+      border-radius: 4px;
+    }
+
+    /* Watermark inside sheet */
+    .sheet-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 72%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      transform: translate(-50%, -46%);
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.16;
+      user-select: none;
+    }
+
+    .sheet-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+    }
+
+    /* Sheet Typography - Fluid Scaling across viewports */
+    .sec-institution {
+      font-family: 'Antonio', sans-serif;
+      font-weight: 700;
+      font-size: clamp(15px, 4.4vw, 28px);
+      letter-spacing: 0.5px;
+      color: #000000;
+      line-height: 1.1;
+      margin-bottom: 3px;
+      text-transform: uppercase;
+    }
+
+    .sec-affiliation {
+      font-family: 'Times New Roman', serif;
+      font-weight: 700;
+      font-size: clamp(7.5px, 1.8vw, 11px);
+      color: var(--accent-blue);
+      letter-spacing: 0.2px;
+      margin-bottom: clamp(10px, 3.5vw, 32px);
+      text-transform: uppercase;
+    }
+
+    .sec-dept-label {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-weight: 700;
+      font-size: clamp(9px, 2.1vw, 13.5px);
+      color: #000000;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .sec-dept-name {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-weight: 700;
+      font-size: clamp(9px, 2.1vw, 13.5px);
+      color: #000000;
+      line-height: 1.3;
+      margin-top: 3px;
+      margin-bottom: clamp(10px, 3.2vw, 28px);
+      text-transform: uppercase;
+    }
+
+    .sec-assignment-label {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-weight: 700;
+      font-size: clamp(9px, 2.1vw, 13.5px);
+      color: #000000;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .sec-assignment-title {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-weight: 700;
+      font-size: clamp(9px, 2.1vw, 13.5px);
+      color: #000000;
+      line-height: 1.3;
+      margin-top: 3px;
+      margin-bottom: clamp(10px, 3.5vw, 30px);
+      text-transform: uppercase;
+      word-break: break-word;
+      min-height: 1.3em;
+    }
+
+    .sec-course-code {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-weight: 700;
+      font-size: clamp(8px, 1.7vw, 11.5px);
+      color: #000000;
+      line-height: 1.3;
+      text-transform: uppercase;
+      min-height: 1.3em;
+    }
+
+    /* Lower Section: Two Columns */
+    .sec-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      text-align: left;
+      margin-top: auto;
+      gap: clamp(6px, 1.8vw, 12px);
+      padding-top: 8px;
+    }
+
+    .sec-col-head {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-weight: 700;
+      font-size: clamp(8.5px, 1.8vw, 12px);
+      color: #434343;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .sec-col-field {
+      font-family: 'Comfortaa', cursive, sans-serif;
+      font-size: clamp(7.5px, 1.55vw, 10.5px);
+      color: #000000;
+      line-height: 1.4;
+      word-break: break-word;
+      min-height: 1.4em;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 2.5px solid #ffffff;
+      width: 17px;
+      height: 17px;
+      animation: spin 0.75s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-content">
+      <span class="badge">Shyamoli Engineering College</span>
+      <h1>Assignment Cover Page Generator</h1>
+      <p class="subtitle">Create and download your assignment cover in seconds.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Form Section -->
+    <section class="card" aria-label="Assignment Details Form">
+      <h2 class="card-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Assignment Details
+      </h2>
+      <p class="card-description">All fields are required. Enter your details below to update the live preview and download.</p>
+
+      <form id="coverForm" novalidate onsubmit="event.preventDefault();">
+        <div class="form-group">
+          <label for="title">1. Assignment Title <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="title" name="title" placeholder="Enter assignment title" autocomplete="off" required>
+          <div class="field-error-text" id="err_title">Please enter the assignment title.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="course">2. Course Code <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="course" name="course" placeholder="Enter course code" autocomplete="off" required>
+          <div class="input-hint">Example: CSE-1101, EEE-1103, MATH-1105</div>
+          <div class="field-error-text" id="err_course">Please enter the course code.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="sname">3. Student Name <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="sname" name="sname" placeholder="Enter your full name" autocomplete="name" required>
+          <div class="field-error-text" id="err_sname">Please enter your full name.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="sid">4. Student ID <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="sid" name="sid" placeholder="Enter your student ID" autocomplete="off" inputmode="numeric" required>
+          <div class="field-error-text" id="err_sid">Please enter your student ID.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="semester">5. Semester <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="semester" name="semester" placeholder="Enter your semester" autocomplete="off" required>
+          <div class="input-hint">Example: 1st, 1st Year 1st Semester</div>
+          <div class="field-error-text" id="err_semester">Please enter your semester.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="tname">6. Teacher Name <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="tname" name="tname" placeholder="Enter teacher's full name" autocomplete="off" required>
+          <div class="field-error-text" id="err_tname">Please enter the teacher's full name.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="tdesignation">7. Teacher Designation <span class="required-star" aria-hidden="true">*</span></label>
+          <input type="text" id="tdesignation" name="tdesignation" placeholder="Enter teacher's designation" autocomplete="off" required>
+          <div class="input-hint">Example: Professor, Associate Professor, Assistant Professor, Lecturer, Department Head</div>
+          <div class="field-error-text" id="err_tdesignation">Please enter the teacher's designation.</div>
+        </div>
+
+        <div class="button-group">
+          <button type="button" class="btn-primary" id="btnDownloadDocx" onclick="handleGenerate('docx')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Generate & Download Word (.docx)
+          </button>
+
+          <button type="button" class="btn-secondary" id="btnDownloadPdf" onclick="handleGenerate('pdf')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            Download PDF
+          </button>
+
+          <button type="button" class="btn-outline" id="btnResetForm" onclick="resetForm()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            Reset Form
+          </button>
+        </div>
+
+        <!-- Mobile Direct Link / Viewer Fallback Container -->
+        <div id="mobileFallback" class="mobile-download-fallback" role="region" aria-live="polite">
+          <div class="fallback-title" id="fallbackTitle">File Ready!</div>
+          <div class="fallback-desc" id="fallbackDesc">Tap below to view or save your file directly on your mobile device:</div>
+          <div class="fallback-links" id="fallbackLinks"></div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Live Preview Section -->
+    <section class="preview-wrapper" aria-label="Cover Page Preview">
+      <div class="preview-header">
+        <span class="preview-title">Live Cover Preview</span>
+        <span class="preview-tag">Letter (8.5 × 11 in)</span>
+      </div>
+
+      <div class="sheet-container" id="coverSheet">
+        <!-- Extracted transparent watermark crest -->
+        <img src="/static/watermark_transparent.png" class="sheet-watermark" alt="College Watermark" crossorigin="anonymous">
+        
+        <div class="sheet-content">
+          <!-- Institutional Top Header -->
+          <div>
+            <div class="sec-institution">SHYAMOLI ENGINEERING COLLEGE</div>
+            <div class="sec-affiliation">A CONSTITUENT COLLEGE OF UNIVERSITY OF DHAKA</div>
+
+            <div class="sec-dept-label">DEPARTMENT OF</div>
+            <div class="sec-dept-name">COMPUTER SCIENCE AND ENGINEERING</div>
+
+            <div class="sec-assignment-label">ASSIGNMENT</div>
+            <div class="sec-assignment-title" id="pvTitle"></div>
+
+            <div class="sec-course-code" id="pvCourse"></div>
+          </div>
+
+          <!-- Bottom Columns: SUBMITTED BY & SUBMITTED TO -->
+          <div class="sec-meta-grid">
+            <div>
+              <div class="sec-col-head">SUBMITTED BY</div>
+              <div class="sec-col-field" id="pvSname"></div>
+              <div class="sec-col-field" id="pvSid"></div>
+              <div class="sec-col-field" id="pvSemester"></div>
+            </div>
+
+            <div>
+              <div class="sec-col-head">SUBMITTED TO</div>
+              <div class="sec-col-field" id="pvTname"></div>
+              <div class="sec-col-field" id="pvTdesignation"></div>
+              <div class="sec-col-field">SHYAMOLI ENGINEERING COLLEGE</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <script>
+    const formFields = [
+      { id: 'title', label: 'Assignment Title' },
+      { id: 'course', label: 'Course Code' },
+      { id: 'sname', label: 'Student Name' },
+      { id: 'sid', label: 'Student ID' },
+      { id: 'semester', label: 'Semester' },
+      { id: 'tname', label: 'Teacher Name' },
+      { id: 'tdesignation', label: 'Teacher Designation' }
+    ];
+
+    const formInputs = {};
+    const errorEls = {};
+    formFields.forEach(f => {
+      formInputs[f.id] = document.getElementById(f.id);
+      errorEls[f.id] = document.getElementById(`err_${f.id}`);
+    });
+
+    const previewEls = {
+      title: document.getElementById('pvTitle'),
+      course: document.getElementById('pvCourse'),
+      sname: document.getElementById('pvSname'),
+      sid: document.getElementById('pvSid'),
+      semester: document.getElementById('pvSemester'),
+      tname: document.getElementById('pvTname'),
+      tdesignation: document.getElementById('pvTdesignation')
+    };
+
+    let isSubmitting = false;
+
+    function updatePreview() {
+      const titleVal = formInputs.title.value.trim();
+      const rawCourse = formInputs.course.value.trim();
+      const snameVal = formInputs.sname.value.trim();
+      const sidVal = formInputs.sid.value.trim();
+      const semVal = formInputs.semester.value.trim();
+      const tnameVal = formInputs.tname.value.trim();
+      const tdesigVal = formInputs.tdesignation.value.trim();
+
+      previewEls.title.textContent = titleVal;
+      previewEls.course.textContent = rawCourse ? (rawCourse.toUpperCase().startsWith('COURSE CODE:') ? rawCourse : `COURSE CODE: ${rawCourse}`) : '';
+      previewEls.sname.textContent = snameVal ? `Name: ${snameVal}` : '';
+      previewEls.sid.textContent = sidVal ? `Student ID: ${sidVal}` : '';
+      previewEls.semester.textContent = semVal ? `Semester: ${semVal}` : '';
+      previewEls.tname.textContent = tnameVal ? `Teacher Name: ${tnameVal}` : '';
+      previewEls.tdesignation.textContent = tdesigVal || '';
+    }
+
+    // Input listeners to update preview and clear errors
+    formFields.forEach(f => {
+      formInputs[f.id].addEventListener('input', () => {
+        updatePreview();
+        if (formInputs[f.id].value.trim()) {
+          formInputs[f.id].classList.remove('input-error');
+          if (errorEls[f.id]) errorEls[f.id].classList.remove('active');
+        }
+      });
+    });
+
+    // Toast notification
+    let toastTimeout = null;
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.className = 'toast';
+      }, 4000);
+    }
+
+    function resetForm() {
+      formFields.forEach(f => {
+        formInputs[f.id].value = '';
+        formInputs[f.id].classList.remove('input-error');
+        if (errorEls[f.id]) errorEls[f.id].classList.remove('active');
+      });
+      document.getElementById('mobileFallback').classList.remove('show');
+      updatePreview();
+      showToast('Form fields have been reset.', 'info');
+    }
+
+    function validateForm() {
+      let firstInvalid = null;
+      let hasError = false;
+
+      formFields.forEach(f => {
+        const input = formInputs[f.id];
+        const val = input.value.trim();
+        const err = errorEls[f.id];
+        if (!val) {
+          input.classList.add('input-error');
+          if (err) err.classList.add('active');
+          if (!firstInvalid) firstInvalid = input;
+          hasError = true;
+        } else {
+          input.classList.remove('input-error');
+          if (err) err.classList.remove('active');
+        }
+      });
+
+      if (hasError && firstInvalid) {
+        firstInvalid.focus();
+        showToast('Please fill in all highlighted fields.', 'error');
+        return false;
+      }
+      return true;
+    }
+
+    // Mobile-friendly binary download handler
+    async function handleGenerate(format) {
+      if (isSubmitting) return;
+      if (!validateForm()) return;
+
+      isSubmitting = true;
+      const btnDocx = document.getElementById('btnDownloadDocx');
+      const btnPdf = document.getElementById('btnDownloadPdf');
+      const activeBtn = format === 'docx' ? btnDocx : btnPdf;
+      const originalHTML = activeBtn.innerHTML;
+
+      btnDocx.disabled = true;
+      btnPdf.disabled = true;
+      activeBtn.innerHTML = `<span class="spinner" aria-hidden="true"></span> Generating ${format.toUpperCase()}...`;
+
+      const payload = {
+        title: formInputs.title.value.trim(),
+        course: formInputs.course.value.trim(),
+        sname: formInputs.sname.value.trim(),
+        sid: formInputs.sid.value.trim(),
+        semester: formInputs.semester.value.trim(),
+        tname: formInputs.tname.value.trim(),
+        tdesignation: formInputs.tdesignation.value.trim()
+      };
+
+      const safeCourse = payload.course.replace(/[^a-zA-Z0-9_\-]/g, '') || 'Cover';
+      const filename = `${safeCourse}_Assignment_Cover.${format}`;
+      const endpoint = format === 'docx' ? '/api/generate-docx' : '/api/generate-pdf';
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          let errorMsg = `Server error (${response.status})`;
+          try {
+            const errData = await response.json();
+            if (errData && errData.error) errorMsg = errData.error;
+          } catch (_) {}
+          showToast(errorMsg, 'error');
+          return;
+        }
+
+        const blob = await response.blob();
+        if (blob.size === 0) {
+          showToast('Generated file was empty. Please try again.', 'error');
+          return;
+        }
+
+        const objectUrl = window.URL.createObjectURL(blob);
+
+        // Standard auto-trigger download
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Show persistent mobile tap button in case auto-click is blocked or on Safari/iOS
+        const fallbackBox = document.getElementById('mobileFallback');
+        const fallbackLinks = document.getElementById('fallbackLinks');
+        const fallbackTitle = document.getElementById('fallbackTitle');
+        const fallbackDesc = document.getElementById('fallbackDesc');
+
+        fallbackTitle.textContent = `${format.toUpperCase()} Ready for Download!`;
+        fallbackDesc.innerHTML = `If the download did not start automatically, tap the button below:`;
+        fallbackLinks.innerHTML = `
+          <a href="${objectUrl}" download="${filename}" class="fallback-btn" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Tap to Open / Save ${filename}
+          </a>
+        `;
+        fallbackBox.classList.add('show');
+
+        setTimeout(() => {
+          a.remove();
+        }, 1000);
+
+        showToast(`${format.toUpperCase()} created successfully!`, 'success');
+
+      } catch (err) {
+        console.error('Download failure:', err);
+        showToast('Connection error. Please check your network and try again.', 'error');
+      } finally {
+        isSubmitting = false;
+        btnDocx.disabled = false;
+        btnPdf.disabled = false;
+        activeBtn.innerHTML = originalHTML;
+      }
+    }
+
+    // Initialize clean view
+    updatePreview();
+  </script>
+</body>
+</html>
