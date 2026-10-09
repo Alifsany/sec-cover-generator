@@ -10,6 +10,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.colors import HexColor
+from reportlab.lib.utils import simpleSplit
 
 # Register TTF fonts for ReportLab if available
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,16 +36,112 @@ try:
 except Exception as e:
     print('Font registration error:', e)
 
+import re
+
+def wrap_text(text, font_name, font_size, max_width):
+    """Wraps text into lines that strictly fit within max_width, breaking long unbroken tokens if needed."""
+    if text is None:
+        return []
+    text_str = str(text).strip()
+    if not text_str:
+        return []
+    lines = simpleSplit(text_str, font_name, font_size, max_width)
+    result = []
+    for line in lines:
+        if pdfmetrics.stringWidth(line, font_name, font_size) <= max_width:
+            result.append(line)
+        else:
+            cur = ''
+            parts = re.split(r'([-\s/_])', line)
+            for p in parts:
+                if not p:
+                    continue
+                test_str = (cur + p) if cur else p
+                if pdfmetrics.stringWidth(test_str, font_name, font_size) <= max_width:
+                    cur = test_str
+                else:
+                    if cur:
+                        result.append(cur)
+                        cur = ''
+                    if pdfmetrics.stringWidth(p, font_name, font_size) > max_width:
+                        char_cur = ''
+                        for ch in p:
+                            if pdfmetrics.stringWidth(char_cur + ch, font_name, font_size) <= max_width:
+                                char_cur += ch
+                            else:
+                                if char_cur:
+                                    result.append(char_cur)
+                                char_cur = ch
+                        cur = char_cur
+                    else:
+                        cur = p
+            if cur:
+                result.append(cur)
+    return result
+
 def generate_docx(title, course, sname, sid, semester, tname, tdesignation, output_path):
     doc = docx.Document()
     section = doc.sections[0]
     section.page_width = Inches(8.5)
     section.page_height = Inches(11.0)
-    section.top_margin = Inches(1.0)
-    section.bottom_margin = Inches(1.0)
     section.left_margin = Inches(1.0)
     section.right_margin = Inches(1.0)
     section.different_first_page_header_footer = False
+
+    title_str = str(title).strip()
+    course_str = str(course).strip()
+    sname_str = str(sname).strip()
+    sid_str = str(sid).strip()
+    sem_str = str(semester).strip()
+    tname_str = str(tname).strip()
+    tdesig_str = str(tdesignation).strip()
+
+    total_chars = len(title_str) + len(course_str) + len(sname_str) + len(tname_str) + len(tdesig_str) + len(sid_str) + len(sem_str)
+    is_very_long = total_chars > 180 or len(title_str) > 75
+    is_long = total_chars > 90 or len(title_str) > 40
+
+    if is_very_long:
+        section.top_margin = Inches(0.75)
+        section.bottom_margin = Inches(0.5)
+        space_after_sub = 28
+        space_after_dept = 22
+        space_after_title = 18
+        space_after_course = 22
+        p1_size = Pt(40)
+        title_sz = Pt(15)
+        course_sz = Pt(12)
+        tbl_head_sz = 14
+        tbl_body_sz = 11.5
+        tbl_space_after = 2
+        tbl_line_spacing = 1.05
+    elif is_long:
+        section.top_margin = Inches(0.9)
+        section.bottom_margin = Inches(0.65)
+        space_after_sub = 42
+        space_after_dept = 32
+        space_after_title = 28
+        space_after_course = 36
+        p1_size = Pt(41.5)
+        title_sz = Pt(17.5)
+        course_sz = Pt(13)
+        tbl_head_sz = 15
+        tbl_body_sz = 12.5
+        tbl_space_after = 2
+        tbl_line_spacing = 1.1
+    else:
+        section.top_margin = Inches(1.0)
+        section.bottom_margin = Inches(0.8)
+        space_after_sub = 60
+        space_after_dept = 44
+        space_after_title = 42
+        space_after_course = 56
+        p1_size = Pt(43)
+        title_sz = Pt(20)
+        course_sz = Pt(14)
+        tbl_head_sz = 16
+        tbl_body_sz = 14
+        tbl_space_after = 3
+        tbl_line_spacing = 1.15
 
     # Watermark in Header
     if os.path.exists(WATERMARK_IMG):
@@ -84,12 +181,12 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     # Paragraph 1: SHYAMOLI ENGINEERING COLLEGE
     p1 = doc.add_paragraph()
     p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p1.paragraph_format.space_before = Pt(14)
-    p1.paragraph_format.space_after = Pt(6)
+    p1.paragraph_format.space_before = Pt(12)
+    p1.paragraph_format.space_after = Pt(4)
     p1.paragraph_format.line_spacing = 1.0
     r1 = p1.add_run("SHYAMOLI ENGINEERING COLLEGE")
     r1.font.name = "Antonio"
-    r1.font.size = Pt(43)
+    r1.font.size = p1_size
     r1.font.bold = True
     r1.font.color.rgb = RGBColor(0, 0, 0)
     r1._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Antonio" w:hAnsi="Antonio" w:cs="Antonio"/>'))
@@ -98,7 +195,7 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     p2 = doc.add_paragraph()
     p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p2.paragraph_format.space_before = Pt(0)
-    p2.paragraph_format.space_after = Pt(66)
+    p2.paragraph_format.space_after = Pt(space_after_sub)
     p2.paragraph_format.line_spacing = 1.0
     r2 = p2.add_run("A CONSTITUENT COLLEGE OF UNIVERSITY OF DHAKA")
     r2.font.name = "Times New Roman"
@@ -114,7 +211,7 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     p3.paragraph_format.line_spacing = 1.15
     r3 = p3.add_run("DEPARTMENT OF")
     r3.font.name = "Comfortaa"
-    r3.font.size = Pt(20)
+    r3.font.size = Pt(19 if is_very_long else 20)
     r3.font.bold = True
     r3._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Comfortaa" w:hAnsi="Comfortaa" w:cs="Comfortaa"/>'))
 
@@ -122,11 +219,11 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     p4 = doc.add_paragraph()
     p4.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p4.paragraph_format.space_before = Pt(0)
-    p4.paragraph_format.space_after = Pt(48)
+    p4.paragraph_format.space_after = Pt(space_after_dept)
     p4.paragraph_format.line_spacing = 1.15
     r4 = p4.add_run("COMPUTER SCIENCE AND ENGINEERING")
     r4.font.name = "Comfortaa"
-    r4.font.size = Pt(20)
+    r4.font.size = Pt(19 if is_very_long else 20)
     r4.font.bold = True
     r4._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Comfortaa" w:hAnsi="Comfortaa" w:cs="Comfortaa"/>'))
 
@@ -138,7 +235,7 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     p5.paragraph_format.line_spacing = 1.15
     r5 = p5.add_run("ASSIGNMENT")
     r5.font.name = "Comfortaa"
-    r5.font.size = Pt(20)
+    r5.font.size = Pt(19 if is_very_long else 20)
     r5.font.bold = True
     r5._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Comfortaa" w:hAnsi="Comfortaa" w:cs="Comfortaa"/>'))
 
@@ -146,25 +243,24 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     p6 = doc.add_paragraph()
     p6.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p6.paragraph_format.space_before = Pt(0)
-    p6.paragraph_format.space_after = Pt(46)
+    p6.paragraph_format.space_after = Pt(space_after_title)
     p6.paragraph_format.line_spacing = 1.15
-    r6 = p6.add_run(str(title).strip())
+    r6 = p6.add_run(title_str)
     r6.font.name = "Comfortaa"
-    r6.font.size = Pt(20)
+    r6.font.size = title_sz
     r6.font.bold = True
     r6._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Comfortaa" w:hAnsi="Comfortaa" w:cs="Comfortaa"/>'))
 
-    # Paragraph 7: Course Code (14 pt as specified in requirement 5 & 6)
+    # Paragraph 7: Course Code
     p7 = doc.add_paragraph()
     p7.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p7.paragraph_format.space_before = Pt(0)
-    p7.paragraph_format.space_after = Pt(62)
+    p7.paragraph_format.space_after = Pt(space_after_course)
     p7.paragraph_format.line_spacing = 1.15
-    course_str = str(course).strip()
     course_display = course_str if course_str.upper().startswith("COURSE CODE:") else f"COURSE CODE: {course_str}"
     r7 = p7.add_run(course_display)
     r7.font.name = "Comfortaa"
-    r7.font.size = Pt(14)
+    r7.font.size = course_sz
     r7.font.bold = True
     r7._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Comfortaa" w:hAnsi="Comfortaa" w:cs="Comfortaa"/>'))
 
@@ -214,7 +310,7 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
     """)
     tcPr_right.append(tcMar_right)
 
-    def add_cell_line(cell, text, size_pt=14, bold=False, color_rgb=(0,0,0), space_after=4):
+    def add_cell_line(cell, text, size_pt=14, bold=False, color_rgb=(0,0,0), space_after=3):
         if len(cell.paragraphs) == 1 and cell.paragraphs[0].text == "":
             p = cell.paragraphs[0]
         else:
@@ -222,7 +318,7 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(0)
         p.paragraph_format.space_after = Pt(space_after)
-        p.paragraph_format.line_spacing = 1.15
+        p.paragraph_format.line_spacing = tbl_line_spacing
         run = p.add_run(text)
         run.font.name = "Comfortaa"
         run.font.size = Pt(size_pt)
@@ -231,18 +327,17 @@ def generate_docx(title, course, sname, sid, semester, tname, tdesignation, outp
         run._r.get_or_add_rPr().append(parse_xml(r'<w:rFonts xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:ascii="Comfortaa" w:hAnsi="Comfortaa" w:cs="Comfortaa"/>'))
         return p
 
-    # Left Column: SUBMITTED BY (16pt heading, 14pt fields)
-    add_cell_line(cell_left, "SUBMITTED BY", 16, bold=True, color_rgb=(67, 67, 67), space_after=10)
-    add_cell_line(cell_left, f"Name: {sname}", 14, bold=False, color_rgb=(0, 0, 0), space_after=4)
-    add_cell_line(cell_left, f"Student ID: {sid}", 14, bold=False, color_rgb=(0, 0, 0), space_after=4)
-    add_cell_line(cell_left, f"Semester: {semester}", 14, bold=False, color_rgb=(0, 0, 0), space_after=0)
+    # Left Column: SUBMITTED BY
+    add_cell_line(cell_left, "SUBMITTED BY", tbl_head_sz, bold=True, color_rgb=(67, 67, 67), space_after=tbl_space_after + 4)
+    add_cell_line(cell_left, f"Name: {sname_str}", tbl_body_sz, bold=False, color_rgb=(0, 0, 0), space_after=tbl_space_after)
+    add_cell_line(cell_left, f"Student ID: {sid_str}", tbl_body_sz, bold=False, color_rgb=(0, 0, 0), space_after=tbl_space_after)
+    add_cell_line(cell_left, f"Semester: {sem_str}", tbl_body_sz, bold=False, color_rgb=(0, 0, 0), space_after=0)
 
-    # Right Column: SUBMITTED TO (16pt heading, 14pt fields)
-    # Includes editable teacher designation and fixed college name below it
-    add_cell_line(cell_right, "SUBMITTED TO", 16, bold=True, color_rgb=(67, 67, 67), space_after=10)
-    add_cell_line(cell_right, f"Teacher Name: {tname}", 14, bold=False, color_rgb=(0, 0, 0), space_after=4)
-    add_cell_line(cell_right, f"{tdesignation}", 14, bold=False, color_rgb=(0, 0, 0), space_after=4)
-    add_cell_line(cell_right, "SHYAMOLI ENGINEERING COLLEGE", 14, bold=False, color_rgb=(0, 0, 0), space_after=0)
+    # Right Column: SUBMITTED TO (Teacher Name directly below without "Teacher Name:" label)
+    add_cell_line(cell_right, "SUBMITTED TO", tbl_head_sz, bold=True, color_rgb=(67, 67, 67), space_after=tbl_space_after + 4)
+    add_cell_line(cell_right, f"{tname_str}", tbl_body_sz, bold=False, color_rgb=(0, 0, 0), space_after=tbl_space_after)
+    add_cell_line(cell_right, f"{tdesig_str}", tbl_body_sz, bold=False, color_rgb=(0, 0, 0), space_after=tbl_space_after)
+    add_cell_line(cell_right, "SHYAMOLI ENGINEERING COLLEGE", tbl_body_sz, bold=False, color_rgb=(0, 0, 0), space_after=0)
 
     doc.save(output_path)
     return output_path
@@ -253,66 +348,180 @@ def generate_pdf(title, course, sname, sid, semester, tname, tdesignation, outpu
 
     # Background Watermark
     if os.path.exists(WATERMARK_IMG):
-        # Center x=306, y=374, size=400x400 (matches PDF exactly: [105.5, 174.4, 505.1, 574.0])
         c.drawImage(WATERMARK_IMG, 106, 174, width=399.5, height=399.5, mask='auto', preserveAspectRatio=True)
 
-    # Heading: SHYAMOLI ENGINEERING COLLEGE
     font_title = 'Antonio-Bold' if 'Antonio-Bold' in pdfmetrics.getRegisteredFontNames() else 'Helvetica-Bold'
     font_sub = 'Times-Bold'
     font_body = 'Comfortaa-Regular' if 'Comfortaa-Regular' in pdfmetrics.getRegisteredFontNames() else 'Helvetica'
     font_bold = 'Comfortaa-Regular' if 'Comfortaa-Regular' in pdfmetrics.getRegisteredFontNames() else 'Helvetica-Bold'
 
+    # 1. Heading: SHYAMOLI ENGINEERING COLLEGE
     c.setFillColor(HexColor('#000000'))
     c.setFont(font_title, 43)
     c.drawCentredString(width / 2.0, 630.3, "SHYAMOLI ENGINEERING COLLEGE")
 
-    # Institutional subtitle: A CONSTITUENT COLLEGE OF UNIVERSITY OF DHAKA
+    # 2. Institutional subtitle: A CONSTITUENT COLLEGE OF UNIVERSITY OF DHAKA
     c.setFillColor(HexColor('#077ACD'))
     c.setFont(font_sub, 14)
     c.drawCentredString(width / 2.0, 594.5, "A CONSTITUENT COLLEGE OF UNIVERSITY OF DHAKA")
 
-    # DEPARTMENT OF
+    # 3. DEPARTMENT OF & COMPUTER SCIENCE AND ENGINEERING
     c.setFillColor(HexColor('#000000'))
     c.setFont(font_bold, 20)
     c.drawCentredString(width / 2.0, 501.2, "DEPARTMENT OF")
-
-    # COMPUTER SCIENCE AND ENGINEERING
     c.drawCentredString(width / 2.0, 473.9, "COMPUTER SCIENCE AND ENGINEERING")
 
-    # ASSIGNMENT
+    # 4. ASSIGNMENT
     c.drawCentredString(width / 2.0, 401.6, "ASSIGNMENT")
 
-    # Assignment Title
-    c.drawCentredString(width / 2.0, 374.3, str(title).strip())
+    # 5. Assignment Title: Dynamic Font Sizing & Complete Wrapping (No Truncation)
+    title_str = str(title).strip()
+    title_fs = 20
+    for fs_cand in [20, 19, 18, 17, 16, 15, 14, 13]:
+        t_lines = wrap_text(title_str, font_bold, fs_cand, 480)
+        if len(t_lines) <= 2:
+            title_fs = fs_cand
+            break
+        title_fs = fs_cand
+    title_lines = wrap_text(title_str, font_bold, title_fs, 480)
+    title_leading = title_fs * 1.22
 
-    # Course Code
+    if len(title_lines) == 1:
+        y_title_start = 374.3
+    elif len(title_lines) == 2:
+        y_title_start = 378.0
+    else:
+        y_title_start = min(382.0, 401.6 - title_fs - 6.0)
+
+    c.setFont(font_bold, title_fs)
+    y_curr = y_title_start
+    for t_line in title_lines:
+        c.drawCentredString(width / 2.0, y_curr, t_line)
+        y_curr -= title_leading
+    y_title_bottom = y_curr + title_leading - (title_fs * 0.3)
+
+    # 6. Course Code: Dynamic Font Sizing & Safe Wrapping
     course_str = str(course).strip()
     course_display = course_str if course_str.upper().startswith("COURSE CODE:") else f"COURSE CODE: {course_str}"
-    c.setFont(font_bold, 14)
-    c.drawCentredString(width / 2.0, 305.5, course_display)
+    course_fs = 14
+    for c_cand in [14, 13, 12, 11]:
+        c_lines = wrap_text(course_display, font_bold, c_cand, 480)
+        if len(c_lines) <= 1:
+            course_fs = c_cand
+            break
+        course_fs = c_cand
+    course_lines = wrap_text(course_display, font_bold, course_fs, 480)
+    course_leading = course_fs * 1.22
 
-    # SUBMITTED BY (x = 90.3 pt)
+    y_course_start = min(305.5, y_title_bottom - 26.0)
+    c.setFont(font_bold, course_fs)
+    y_c_curr = y_course_start
+    for cline in course_lines:
+        c.drawCentredString(width / 2.0, y_c_curr, cline)
+        y_c_curr -= course_leading
+    course_bottom = y_c_curr + course_leading - (course_fs * 0.3)
+
+    # 7. Lower Section: SUBMITTED BY (x = 90.3 pt) & SUBMITTED TO (x = 345.3 pt)
+    sname_str = str(sname).strip()
+    sid_str = str(sid).strip()
+    sem_str = str(semester).strip()
+    tname_str = str(tname).strip()
+    tdesig_str = str(tdesignation).strip()
+
+    # Per-field adaptive base sizing for long entries
+    sname_base_fs = 11.0 if len(sname_str) > 50 else (12.5 if len(sname_str) > 28 else 14.0)
+    tname_base_fs = 11.0 if len(tname_str) > 50 else (12.5 if len(tname_str) > 28 else 14.0)
+    tdesig_base_fs = 10.5 if len(tdesig_str) > 55 else (12.0 if len(tdesig_str) > 30 else 14.0)
+    sid_base_fs = 12.0 if len(sid_str) > 24 else 14.0
+    sem_base_fs = 12.0 if len(sem_str) > 28 else 14.0
+    college_base_fs = 14.0
+
+    # Iterative layout scaling to strictly satisfy bottom page boundary (lowest_y >= 45 pt)
+    col_width = 230.0
+    best_scale = 1.0
+    best_heading_y = 216.3
+    best_heading_fs = 16.0
+    best_left_items = []
+    best_right_items = []
+    best_gap_under_heading = 16.0
+    best_field_gap = 4.0
+
+    for scale in [1.0, 0.95, 0.9, 0.85, 0.8, 0.75]:
+        heading_fs = max(13.0, round(16.0 * scale, 1))
+        gap_under_heading = round(16.0 * scale, 1)
+        field_gap = round(4.0 * scale, 1)
+
+        left_items = [
+            (f"Name: {sname_str}", max(10.0, sname_base_fs * scale)),
+            (f"Student ID: {sid_str}", max(10.0, sid_base_fs * scale)),
+            (f"Semester: {sem_str}", max(10.0, sem_base_fs * scale))
+        ]
+        # Teacher Name displayed directly without "Teacher Name:" label
+        right_items = [
+            (tname_str, max(10.0, tname_base_fs * scale)),
+            (tdesig_str, max(10.0, tdesig_base_fs * scale)),
+            ("SHYAMOLI ENGINEERING COLLEGE", max(10.0, college_base_fs * scale))
+        ]
+
+        # Calculate left column height
+        left_h = gap_under_heading
+        for text, fs in left_items:
+            lines = wrap_text(text, font_body, fs, col_width)
+            lh = fs * 1.2
+            left_h += len(lines) * lh + field_gap
+
+        # Calculate right column height
+        right_h = gap_under_heading
+        for text, fs in right_items:
+            lines = wrap_text(text, font_body, fs, col_width)
+            lh = fs * 1.2
+            right_h += len(lines) * lh + field_gap
+
+        total_meta_h = max(left_h, right_h)
+        heading_y = 216.3 if total_meta_h < 130 else min(226.0, course_bottom - 26.0)
+        lowest_y = heading_y - total_meta_h
+
+        best_scale = scale
+        best_heading_y = heading_y
+        best_heading_fs = heading_fs
+        best_left_items = left_items
+        best_right_items = right_items
+        best_gap_under_heading = gap_under_heading
+        best_field_gap = field_gap
+
+        if lowest_y >= 45.0:
+            break
+
+    # Draw Metadata Headings
     c.setFillColor(HexColor('#434343'))
-    c.setFont(font_bold, 16)
-    c.drawString(90.3, 216.3, "SUBMITTED BY")
+    c.setFont(font_bold, best_heading_fs)
+    c.drawString(90.3, best_heading_y, "SUBMITTED BY")
+    c.drawString(345.3, best_heading_y, "SUBMITTED TO")
 
+    # Draw Left Column: SUBMITTED BY
     c.setFillColor(HexColor('#000000'))
-    c.setFont(font_body, 14)
-    c.drawString(90.3, 190.0, f"Name: {sname}")
-    c.drawString(90.3, 170.0, f"Student ID: {sid}")
-    c.drawString(90.3, 150.0, f"Semester: {semester}")
+    y_l_curr = best_heading_y - best_gap_under_heading
+    for text, fs in best_left_items:
+        lines = wrap_text(text, font_body, fs, col_width)
+        c.setFont(font_body, fs)
+        lh = fs * 1.2
+        for l in lines:
+            c.drawString(90.3, y_l_curr, l)
+            y_l_curr -= lh
+        y_l_curr -= best_field_gap
 
-    # SUBMITTED TO (x = 345.3 pt)
-    c.setFillColor(HexColor('#434343'))
-    c.setFont(font_bold, 16)
-    c.drawString(345.3, 216.3, "SUBMITTED TO")
-
-    c.setFillColor(HexColor('#000000'))
-    c.setFont(font_body, 14)
-    c.drawString(345.3, 190.0, f"Teacher Name: {tname}")
-    c.drawString(345.3, 170.0, str(tdesignation).strip())
-    c.drawString(345.3, 150.0, "SHYAMOLI ENGINEERING COLLEGE")
+    # Draw Right Column: SUBMITTED TO (Teacher Name, Designation, College Name)
+    y_r_curr = best_heading_y - best_gap_under_heading
+    for text, fs in best_right_items:
+        lines = wrap_text(text, font_body, fs, col_width)
+        c.setFont(font_body, fs)
+        lh = fs * 1.2
+        for l in lines:
+            c.drawString(345.3, y_r_curr, l)
+            y_r_curr -= lh
+        y_r_curr -= best_field_gap
 
     c.showPage()
     c.save()
     return output_path
+

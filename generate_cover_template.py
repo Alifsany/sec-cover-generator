@@ -230,7 +230,7 @@ def create_cover_page():
 
     # Right Column: SUBMITTED TO
     add_cell_line(cell_right, "SUBMITTED TO", 16, bold=True, color_rgb=(67, 67, 67), space_after=10)
-    add_cell_line(cell_right, "Teacher Name: [ENTER TEACHER'S FULL NAME]", 13, bold=False, color_rgb=(0, 0, 0), space_after=4)
+    add_cell_line(cell_right, "[ENTER TEACHER'S FULL NAME]", 13, bold=False, color_rgb=(0, 0, 0), space_after=4)
     add_cell_line(cell_right, "Designation: [ENTER TEACHER'S DESIGNATION]", 11.5, bold=False, color_rgb=(0, 0, 0), space_after=4)
     add_cell_line(cell_right, "Institution: SHYAMOLI ENGINEERING COLLEGE", 11.5, bold=False, color_rgb=(0, 0, 0), space_after=0)
 
